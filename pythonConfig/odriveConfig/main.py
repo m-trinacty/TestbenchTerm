@@ -211,23 +211,38 @@ class D6374MotorConfig:
         self.odrv_axis.encoder.config.pre_calibrated = True
 
         # ANTICOGGING calibration
+        print("Setting values for Anticogging")
         # Put the controller in position control mode
         self.odrv_axis.controller.config.control_mode = CONTROL_MODE_POSITION_CONTROL
         self.odrv_axis.controller.config.input_mode = INPUT_MODE_PASSTHROUGH
         self.odrv_axis.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
 
-        # Temporarily increase the gain
-        self.odrv_axis.controller.config.pos_gain = 200.0
-        self.odrv_axis.controller.config.vel_integrator_gain = 0.0150
-        self.odrv_axis.controller.config.vel_gain = 0.0005
+        self.odrv_axis.controller.config.anticogging.calib_pos_threshold = 10
+
+        self.odrv_axis.controller.config.anticogging.calib_vel_threshold = 10
+
+        #Temporarily increase the gain
+        self.odrv_axis.controller.config.pos_gain = 300
+        self.odrv_axis.controller.config.vel_integrator_gain =0.01
+        self.odrv_axis.controller.config.vel_gain = 0.01
+
+        #set threshold for calibration higher
+        self.odrv_axis.controller.config.anticogging.calib_vel_threshold = 80
+        self.odrv_axis.controller.config.anticogging.calib_pos_threshold = 80
+
         # THIS IS THE MAGIC - Start the calibration
 
         print("Starting anticogging calibration")
+        calib_time = 0
         self.odrv_axis.controller.start_anticogging_calibration()
         time.sleep(2)
+        calib_time = calib_time + 2
         while self.odrv_axis.controller.config.anticogging.calib_anticogging:
             print("Anticogging calibration: " + str(self.odrv_axis.controller.config.anticogging.calib_anticogging))
+            calib_time = calib_time + 2
             time.sleep(2)
+
+        print("Anticogging calibration took: "+str(calib_time)+" seconds")
 
         self.odrv_axis.controller.config.anticogging.pre_calibrated = True
         # Put updated values for anticogging calibration back to normal
@@ -239,10 +254,10 @@ class D6374MotorConfig:
         self.odrv_axis.controller.config.control_mode = CONTROL_MODE_VELOCITY_CONTROL
         self.odrv_axis.controller.config.input_mode = INPUT_MODE_VEL_RAMP
         self.odrv_axis.controller.config.vel_ramp_rate = 5
+        self.odrv_axis.requested_state = AXIS_STATE_IDLE
+        time.sleep(2)
 
         print("Saving calibration configuration and rebooting...")
-        # self.odrv.save_configuration()
-        # print("Calibration configuration saved.")
         try:
             self.odrv.save_configuration()
             print("Calibration configuration saved.")
@@ -250,7 +265,7 @@ class D6374MotorConfig:
             pass
         time.sleep(5)
         self._find_odrive()
-        print("Setting values for Anticogging")
+
 
         try:
             print("Reboot Odrive.")
@@ -304,11 +319,6 @@ if __name__ == "__main__":
           "resist you.")
     d6374_motor_config.mode_close_loop_control()
 
-    # Go from 0 to 360 degrees in increments of 30 degrees
-    #for angle in range(0, 390, 30):
-    #    print("Setting motor to {} degrees.".format(angle))
-    #    hb_motor_config.move_input_pos(angle)
-    #    time.sleep(5)
     #Spin motor for 10 seconds in speed of 2 turns per second, then other way same speed
     vel = 0.05
     print("Startin rotation in speed "+str(vel)+" turns per second for 5 seconds")
@@ -316,8 +326,9 @@ if __name__ == "__main__":
     time.sleep(5)
 
     print("Startin rotation in speed "+str(vel)+" turns per second for 5 seconds in reverse")
-    d6374_motor_config.move_input_vel(-vel)
+    d6374_motor_config.move_input_vel(-1*vel)
     time.sleep(5)
     print("Placing motor in idle. If you move motor, motor will "
           "move freely")
     d6374_motor_config.mode_idle()
+    sys.exit(0)
