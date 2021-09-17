@@ -38,4 +38,5 @@
 *.files
 *.includes
 QtCreatorDeployment.txt
-
+*.creator
+*.creator.user
