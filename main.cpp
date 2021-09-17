@@ -1,11 +1,8 @@
-//============================================================================
-// Name        : TestCPP1.cpp
-// Author      : Martin Trinacty
-// Version     :
-// Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
-//============================================================================
-
+/*
+ * Copyright (C) Aero4TE, s.r.o. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ */
 #include <iostream>
 #include "port.h"
 #include <string>
@@ -38,7 +35,7 @@ int main() {
 	pos= odrive->getPosInTurns(0);
 	cout<<"Pos"<<fixed<<pos<<endl;
 	usleep(second*2);*/
-	float pos;
+    /*float pos;
 	odrive->setState(0,odrive->AXIS_STATE_FULL_CALIBRATION_SEQUENCE);
 	usleep(second*10);
 	cout<<"Encoder Offset calibration"<<endl;
@@ -71,8 +68,11 @@ int main() {
 		cout<<"Pos = "<<fixed<<pos<<endl;
 		usleep(second);
 
-	}
+    }*/
+    odrive->setState(0,odrive->AXIS_STATE_CLOSED_LOOP_CONTROL);
+    //odrive->setVelocity(1);
+    usleep(10*second);
 	cout<<"Setting AXIS_STATE_LOCKIN_IDLE"<<endl;
 	odrive->setState(0,odrive->AXIS_STATE_IDLE);
-	return 0;
+    return 0;
 };

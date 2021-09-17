@@ -1,8 +1,7 @@
 /*
- * pps.h
- *
- *  Created on: 17. 8. 2021
- *      Author: martinek
+ * Copyright (C) Aero4TE, s.r.o. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
  */
 
 #ifndef PPS_H_
@@ -12,7 +11,6 @@
 #include <condition_variable>
 #include <mutex>
 
-using namespace std;
 
 class pps {
 private:
@@ -20,15 +18,15 @@ private:
 	int m_fd;
 	void syncPPS();
 	int openPPS();;
-	string m_ppsFileName;
+    std::string m_ppsFileName;
 protected:
 
 
 public:
 	pps();
-	pps(string ppsName);
+    pps(std::string ppsName);
 	struct ppsSignal{
-		string time = "0";
+        std::string time = "0";
 		//double time=0.000000000;
 		int cnt=0;
 	};

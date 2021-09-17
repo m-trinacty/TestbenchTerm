@@ -1,8 +1,7 @@
 /*
- * oDrive.cpp
- *
- *  Created on: 16. 8. 2021
- *      Author: martinek
+ * Copyright (C) Aero4TE, s.r.o. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
  */
 
 #include "oDrive.h"
@@ -11,7 +10,6 @@
 #include <unistd.h>
 #define	ERROR_COMMAND "ERROR could not write command"
 
-using namespace std;
 
 
 oDrive::oDrive() {
@@ -19,23 +17,23 @@ oDrive::oDrive() {
 
 }
 
-oDrive::oDrive(string portName){
+oDrive::oDrive(std::string portName){
 	m_oDrivePort = new port(portName);
 }
 int oDrive::commandConsole(){
-	string out;
-		cout << "********************************" << endl;
-		cout << "| oDrive Tool on Toradex       |" << endl;
-		cout << "| Please input ASCII comands   |" << endl;
-		cout << "| To control oDrive            |" << endl;
-		cout << "********************************" << endl;
+    std::string out;
+        std::cout << "********************************" << std::endl;
+        std::cout << "| oDrive Tool on Toradex       |" << std::endl;
+        std::cout << "| Please input ASCII comands   |" << std::endl;
+        std::cout << "| To control oDrive            |" << std::endl;
+        std::cout << "********************************" << std::endl;
 
 		//oDrive->writeToPort("w axis0.requested_state 3");
-		string input="aaaa";
+        std::string input="aaaa";
 		char startLetter= 'a';
 		while(1){
-			cout<<">>";
-			getline(cin, input);
+            std::cout<<">>";
+            getline(std::cin, input);
 			startLetter = input[0];
 			if(input=="quit"){
 				break;
@@ -46,7 +44,7 @@ int oDrive::commandConsole(){
 					m_oDrivePort->writeToPort(input);
 					usleep(100);
 					out = m_oDrivePort->readFromPort();
-					cout << out <<endl;
+                    std::cout << out << std::endl;
 					break;
 				case 'w':
 					m_oDrivePort->writeToPort(input);
@@ -62,35 +60,35 @@ int oDrive::commandConsole(){
 }
 int oDrive::setState(int axis,int state){
 	//TODO some checks
-	string command = "w axis"+ to_string(axis)+ ".requested_state "+to_string(state);
+    std::string command = "w axis"+ std::to_string(axis)+ ".requested_state "+std::to_string(state);
 	m_oDrivePort->writeToPort(command);
 	usleep(100);
 	return EXIT_SUCCESS;
 }
 int oDrive::setLockinVelocity(int axis, float vel){
-	string command = "w axis"+to_string(axis)+".config.general_lockin.vel "+to_string(vel);
+    std::string command = "w axis"+std::to_string(axis)+".config.general_lockin.vel "+std::to_string(vel);
 	m_oDrivePort->writeToPort(command);
 	usleep(100);
 	return EXIT_SUCCESS;
 }
 int oDrive::getLockinVelocity(int axis){
-	string command = "r axis"+to_string(axis)+".config.general_lockin.vel";
-	string out;
+    std::string command = "r axis"+std::to_string(axis)+".config.general_lockin.vel";
+    std::string out;
 	m_oDrivePort->writeToPort(command);
 	usleep(100);
 	out = m_oDrivePort->readFromPort();
-	cout << out <<endl;
+    std::cout << out << std::endl;
 	return EXIT_SUCCESS;
 }
 
 float oDrive::getPosInTurns(int axis){
-	string command = "f "+to_string(axis);
-	string out;
-	string delimiter = " ";
+    std::string command = "f "+std::to_string(axis);
+    std::string out;
+    std::string delimiter = " ";
 	float pos;
 	if(m_oDrivePort->writeToPort(command)<0){
-		cout<<ERROR_COMMAND<<endl;
-	return EXIT_FAILURE;
+        std::cout<<ERROR_COMMAND<<std::endl;
+    return 0;
 	}
 	usleep(100);
 	out = m_oDrivePort->readFromPort();
@@ -98,12 +96,12 @@ float oDrive::getPosInTurns(int axis){
 	return pos;
 }
 int oDrive::setPosInTurns(int axis,float pos){
-	string command = "q "+to_string(axis)+" "+to_string(pos);
-	string out;
-	string delimiter = " ";
+    std::string command = "q "+std::to_string(axis)+" "+std::to_string(pos);
+    std::string out;
+    std::string delimiter = " ";
 	if(m_oDrivePort->writeToPort(command)<0){
-		cout<<ERROR_COMMAND<<endl;
-		return EXIT_FAILURE;
+        std::cout<<ERROR_COMMAND<<std::endl;
+        return 0;
 	}
 	usleep(100);
 	return EXIT_SUCCESS;

@@ -1,10 +1,9 @@
 /*
- * port.h
- *
- *  Created on: 9. 8. 2021
- *      Author: martinek
+ * Copyright (C) Aero4TE, s.r.o. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
  */
-//#include <cstring>
+
 #include <iostream>
 #include <string>
 // Linux headers
@@ -13,13 +12,11 @@
 #ifndef PORT_H_
 #define PORT_H_
 
-using namespace std;
-
 
 class port {
 
 private:
-	string m_portName;
+    std::string m_portName;
 	struct termios portSettings;
 
 	int m_serialPort;
@@ -29,7 +26,7 @@ private:
 	 * @param portName
 	 * @return
 	 */
-	int openPort(string portName);
+    int openPort(std::string portName);
 	/**
 	 * closePort
 	 * Closing port used for communication, after close, the port needs to be reopen.
@@ -45,14 +42,14 @@ private:
 	 * @param size Size of returned text
 	 * @return
 	 */
-	string charArrayToString(char * text,int size);
+    std::string charArrayToString(char * text,int size);
 public:
 	port();
-	port(string portName);
-	int writeToPort(string message);
-	string readFromPort();
-	int setPort(string portName);
-	string getPort();
+    port(std::string portName);
+    int writeToPort(std::string message);
+    std::string readFromPort();
+    int setPort(std::string portName);
+    std::string getPort();
 	virtual ~port();
 
 

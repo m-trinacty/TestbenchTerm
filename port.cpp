@@ -1,8 +1,7 @@
 /*
- * port.cpp
- *
- *  Created on: 9. 8. 2021
- *      Author: martinek
+ * Copyright (C) Aero4TE, s.r.o. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
  */
 
 #include "port.h"
@@ -21,12 +20,11 @@
 #include <termios.h> // Contains POSIX terminal control definitions
 #include <unistd.h> // write(), read(), close()
 
-using namespace std;
 
 port::port() {
 	m_serialPort=-1;
 }
-port::port(string portName){
+port::port(std::string portName){
 	m_portName = portName;
 	openPort(m_portName);
 }
@@ -34,8 +32,8 @@ port::port(string portName){
 int port::setInterfaceAttribs(int fd, int speed, int parity){
 	struct termios tty;
 	if (tcgetattr (fd, &tty) != 0){
-		cout << "Error "<< errno << " from tcgetattr: " << strerror(errno) << endl;
-		return EXIT_FAILURE;
+        std::cout << "Error "<< errno << " from tcgetattr: " << strerror(errno) << std::endl;
+        return 0;
 	}
 
 	cfsetospeed (&tty, speed);
@@ -61,8 +59,8 @@ int port::setInterfaceAttribs(int fd, int speed, int parity){
 	tty.c_cflag &= ~CRTSCTS;
 
 	if (tcsetattr (fd, TCSANOW, &tty) != 0){
-		cout << "Error "<< errno << " from tcsetattr: " << strerror(errno) << endl;
-		return EXIT_FAILURE;
+        std::cout << "Error "<< errno << " from tcsetattr: " << strerror(errno) << std::endl;
+        return 0;
 	}
     return EXIT_SUCCESS;
 }
@@ -70,7 +68,7 @@ void port::setBlocking(int fd, int shouldBlock){
 	//struct termios tty;
 	memset (&portSettings, 0, sizeof portSettings);
 	if (tcgetattr (fd, &portSettings) != 0){
-		cout << "Error "<< errno << " from tcgetattr: " << strerror(errno) << endl;
+        std::cout << "Error "<< errno << " from tcgetattr: " << strerror(errno) << std::endl;
 		return;
 	}
 
@@ -78,26 +76,26 @@ void port::setBlocking(int fd, int shouldBlock){
 	portSettings.c_cc[VTIME] = 5;            // 0.5 seconds read timeout
 
 	if (tcsetattr (fd, TCSANOW, &portSettings) != 0){
-		cout << "Error "<< errno << " from tcsetattr: " << strerror(errno) << endl;
+        std::cout << "Error "<< errno << " from tcsetattr: " << strerror(errno) << std::endl;
 		return;
 	}
 }
 
-int port::openPort(string portName){
+int port::openPort(std::string portName){
 	const char * cportName = portName.c_str();
 
 	//char * cportName ="/dev/ttyACM0";
 	m_serialPort = open(cportName,O_RDWR | O_NOCTTY | O_SYNC);
 
 	if(m_serialPort < 0){
-		cout << "Error "<< errno << " from open: " << strerror(errno) << endl;
-		return EXIT_FAILURE;
+        std::cout << "Error "<< errno << " from open: " << strerror(errno) << std::endl;
+        return 0;
 	}
 	setInterfaceAttribs(m_serialPort,B115200,0);
 
 	return EXIT_SUCCESS;
 }
-int port::writeToPort(string message){
+int port::writeToPort(std::string message){
 	unsigned char msg[message.length()+1];
 	for (int i = 0; i < (int)message.length(); i++) {
 		msg[i]=message[i];
@@ -105,18 +103,18 @@ int port::writeToPort(string message){
 	msg[message.length()]='\r';
 	int numBytes = write(m_serialPort, msg, sizeof(msg));
 	if(numBytes < 0){
-		cout << "Error "<< errno << " writing: " << strerror(errno) << endl;
-		return EXIT_FAILURE;
+        std::cout << "Error "<< errno << " writing: " << strerror(errno) << std::endl;
+        return 0;
 	}
 	return numBytes;
 }
 //cant read
-string port::readFromPort(){
+std::string port::readFromPort(){
 	char readBuf [256];
 	int numBytes=read(m_serialPort,&readBuf,sizeof(readBuf));
-	string output="NOT_READ";
+    std::string output="NOT_READ";
 	if (numBytes < 0) {
-		cout << "Error "<< errno << " reading: " << strerror(errno) << endl;
+        std::cout << "Error "<< errno << " reading: " << strerror(errno) << std::endl;
 		return output;
 	}
 	if(numBytes>0){
@@ -131,9 +129,9 @@ int port::closePort(){
 	return 0;
 }
 
-string port::charArrayToString(char * text,int size){
+std::string port::charArrayToString(char * text,int size){
 	//int size = sizeof(text)/sizeof(text[0]);
-	string output = "";
+    std::string output = "";
 	for (int i = 0; i < size; ++i) {
 		output = output + text[i];
 	}
@@ -141,17 +139,17 @@ string port::charArrayToString(char * text,int size){
 
 }
 
-int port::setPort(string portName){
+int port::setPort(std::string portName){
 	m_portName = portName;
 	openPort(m_portName);
 	return EXIT_SUCCESS;
 }
-string port::getPort(){
+std::string port::getPort(){
 	return m_portName;
 }
 
 port::~port() {
-	cout <<"Closing "<< m_portName <<endl;
+    std::cout <<"Closing "<< m_portName << std::endl;
 	closePort();
 	// TODO Auto-generated destructor stub
 }

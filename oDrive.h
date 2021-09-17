@@ -1,8 +1,7 @@
 /*
- * oDrive.h
- *
- *  Created on: 16. 8. 2021
- *      Author: martinek
+ * Copyright (C) Aero4TE, s.r.o. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
  */
 
 #ifndef ODRIVE_H_
@@ -10,7 +9,6 @@
 
 #include <string>
 #include "port.h"
-using namespace std;
 
 
 class oDrive {
@@ -36,7 +34,7 @@ public:
 		AXIS_STATE_ENCODER_HALL_POLARITY_CALIBRATION,
 		AXIS_STATE_ENCODER_HALL_PHASE_CALIBRATION
 	};
-	oDrive(string portName);
+    oDrive(std::string portName);
 	int commandConsole();
 	virtual ~oDrive();
 	int setState(int axis, int state);
