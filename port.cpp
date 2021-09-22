@@ -103,9 +103,9 @@ int port::writeToPort(std::string message){
 	msg[message.length()]='\r';
 	int numBytes = write(m_serialPort, msg, sizeof(msg));
 	if(numBytes < 0){
-        std::cout << "Error "<< errno << " writing: " << strerror(errno) << std::endl;
+        std::cout << "Error "<< errno << " writing: " << strerror(errno) << std::endl<<std::flush;
         return 0;
-	}
+    }
 	return numBytes;
 }
 //cant read
