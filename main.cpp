@@ -26,17 +26,21 @@ int main() {
     odrive->setState(0,odrive->AXIS_STATE_CLOSED_LOOP_CONTROL);
     auto now=std::chrono::system_clock::now();
     auto nowTime =  std::chrono::system_clock::to_time_t(now);
-    auto start = std::chrono::steady_clock::time_point();
+    auto start = std::chrono::steady_clock::now();
     std::stringstream ss;
     ss<<std::put_time(std::localtime(&nowTime),"%Y-%m-%d %X");
+
     std::cout<<"sys_clock::now() = "<< ss.str()<<std::endl;
     std::cout<<"Setting velocity to 2"<<std::endl;
-    odrive->setVelocity(0,2);
+    odrive->setVelocity(0,7);
+    auto timer = std::chrono::seconds(1);
     while(1)
     {
 
-        if(std::chrono::steady_clock::now() - start> std::chrono::seconds(1))
+        if(std::chrono::steady_clock::now() - (start+timer) > std::chrono::seconds(1))
         {
+            timer = timer+std::chrono::seconds(1);
+            now=std::chrono::system_clock::now();
             nowTime =  std::chrono::system_clock::to_time_t(now);
             std::stringstream ss;
             ss<<std::put_time(std::localtime(&nowTime),"%Y-%m-%d %X");
@@ -48,11 +52,11 @@ int main() {
             std::cout<<"______________________________"<<std::endl<<std::endl;
 
             std::cout<<"Pos Estimate"<<std::endl;
-            odrive->getPosCircular(0);
+            odrive->getPosEstimate(0);
             std::cout<<"______________________________"<<std::endl<<std::endl;
 
             std::cout<<"Pos Estimate Counts"<<std::endl;
-            odrive->getPosCircular(0);
+            odrive->getPosEstimateCounts(0);
             std::cout<<"______________________________"<<std::endl<<std::endl;
         }
         if(std::chrono::steady_clock::now()- start> std::chrono::seconds(10))
@@ -60,10 +64,6 @@ int main() {
             break;
         }
     }
-    std::cout<<"Setting velocity to -1"<<std::endl;
-    odrive->setVelocity(0,-1);
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    std::cout<<"Setting velocity to 0"<<std::endl;odrive->setVelocity(0,0);
     odrive->setState(0,odrive->AXIS_STATE_IDLE);
 
     //odrive->commandConsole();

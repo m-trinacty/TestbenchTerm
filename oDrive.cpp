@@ -99,7 +99,7 @@ float oDrive::getPosEstimate(int axis)
     }
     usleep(100);
     out = m_oDrivePort->readFromPort();
-    if (out == INVALID_PROPERTY || INVALID_COMMAND_FORMAT || UNKNOWN_COMMAND) {
+    if (out == INVALID_PROPERTY ||out ==  INVALID_COMMAND_FORMAT ||out ==  UNKNOWN_COMMAND) {
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
@@ -175,7 +175,7 @@ float oDrive::getPosInTurns(int axis){
     }
     usleep(100);
     out = m_oDrivePort->readFromPort();
-    if (out == INVALID_PROPERTY || INVALID_COMMAND_FORMAT || UNKNOWN_COMMAND) {
+    if (out == INVALID_PROPERTY || out == INVALID_COMMAND_FORMAT || out == UNKNOWN_COMMAND) {
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
