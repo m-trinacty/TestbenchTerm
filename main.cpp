@@ -18,12 +18,10 @@
 
 int main() {
 
-    const int second = 1000000;
-    std::string ppsFile = "/sys/class/pps/pps0/assert";
-    //pps * ppsOut = new pps(ppsFile);
     const std::string portName = "/dev/ttyACM0";
     std::unique_ptr<oDrive> odrive(new oDrive(portName));
     odrive->setState(0,odrive->AXIS_STATE_CLOSED_LOOP_CONTROL);
+
     auto now=std::chrono::system_clock::now();
     auto nowTime =  std::chrono::system_clock::to_time_t(now);
     auto start = std::chrono::steady_clock::now();
@@ -48,15 +46,18 @@ int main() {
             std::cout<<"________________________________________________"<<std::endl<<std::endl;
 
             std::cout<<"Pos Circular"<<std::endl;
-            odrive->getPosCircular(0);
+            float posCircular=odrive->getPosCircular(0);
+            std::cout<<posCircular<<std::endl;
             std::cout<<"______________________________"<<std::endl<<std::endl;
 
             std::cout<<"Pos Estimate"<<std::endl;
-            odrive->getPosEstimate(0);
+            float posEstimate=odrive->getPosEstimate(0);
+            std::cout<<posEstimate<<std::endl;
             std::cout<<"______________________________"<<std::endl<<std::endl;
 
             std::cout<<"Pos Estimate Counts"<<std::endl;
-            odrive->getPosEstimateCounts(0);
+            float posEstimateCounts =odrive->getPosEstimateCounts(0);
+            std::cout<<posEstimateCounts<<std::endl;
             std::cout<<"______________________________"<<std::endl<<std::endl;
         }
         if(std::chrono::steady_clock::now()- start> std::chrono::seconds(10))

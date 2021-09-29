@@ -13,6 +13,7 @@
 #define INVALID_PROPERTY    "invalid property"
 #define INVALID_COMMAND_FORMAT  "invalid command format"
 #define UNKNOWN_COMMAND "unknown command"
+#define PRINT_READ_VALUES   false
 
 
 oDrive::oDrive() {
@@ -103,7 +104,9 @@ float oDrive::getPosEstimate(int axis)
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
-    std::cout << out << std::endl;
+    #if PRINT_READ_VALUES
+        std::cout << out << std::endl;
+    #endif
     float pos =std::stof(out);
     return pos;
 }
@@ -112,7 +115,6 @@ float oDrive::getPosEstimateCounts(int axis)
 {
     std::string out;
     std::string command = "r axis"+std::to_string(axis)+".encoder.pos_estimate_counts";
-    std::cout<<command<<std::endl;
     if (m_oDrivePort->writeToPort(command)<0) {
         std::cout<<ERROR_COMMAND_WRITE<<std::endl;
         return EXIT_FAILURE;
@@ -124,7 +126,9 @@ float oDrive::getPosEstimateCounts(int axis)
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
-    std::cout << out << std::endl;
+    #if PRINT_READ_VALUES
+        std::cout << out << std::endl;
+    #endif
     float pos =std::stof(out);
     return pos;
 }
@@ -143,7 +147,9 @@ float oDrive::getPosCircular(int axis)
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
-    std::cout << out << std::endl;
+    #if PRINT_READ_VALUES
+        std::cout << out << std::endl;
+    #endif
     float pos =std::stof(out);
     return pos;
 }
@@ -160,7 +166,9 @@ int oDrive::getLockinVelocity(int axis){
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
-    std::cout << out << std::endl;
+    #if PRINT_READ_VALUES
+        std::cout << out << std::endl;
+    #endif
     return EXIT_SUCCESS;
 }
 
@@ -179,6 +187,9 @@ float oDrive::getPosInTurns(int axis){
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
+    #if PRINT_READ_VALUES
+        std::cout << out << std::endl;
+    #endif
     pos =stof(out.substr(0,out.find(delimiter)));
     return pos;
 }
