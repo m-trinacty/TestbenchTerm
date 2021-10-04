@@ -68,10 +68,23 @@ int oDrive::commandConsole(){
     }
     return EXIT_SUCCESS;
 }
-int oDrive::setState(int axis,int state){
+int oDrive::setAxisState(int axis,int state){
     //TODO some checks
     std::string command = "w axis"+ std::to_string(axis)+ ".requested_state "+std::to_string(state);
-    m_oDrivePort->writeToPort(command);
+    if (m_oDrivePort->writeToPort(command)<0) {
+        std::cout<<ERROR_COMMAND_WRITE<<std::endl;
+        return EXIT_FAILURE;
+    }
+    usleep(100);
+    return EXIT_SUCCESS;
+}
+
+int oDrive::setInputMode(int axis, int mode){
+    std::string command = "w axis"+std::to_string(axis)+ ".controller.input_mode "+std::to_string(mode);
+    if (m_oDrivePort->writeToPort(command)<0) {
+        std::cout<<ERROR_COMMAND_WRITE<<std::endl;
+        return EXIT_FAILURE;
+    }
     usleep(100);
     return EXIT_SUCCESS;
 }

@@ -34,10 +34,22 @@ public:
         AXIS_STATE_ENCODER_HALL_POLARITY_CALIBRATION,
         AXIS_STATE_ENCODER_HALL_PHASE_CALIBRATION
     };
+    enum InputMode{
+        INPUT_MODE_INACTIVE,
+        INPUT_MODE_PASSTHROUGH,
+        INPUT_MODE_VEL_RAMP,
+        INPUT_MODE_POS_FILTER,
+        INPUT_MODE_MIX_CHANNELS,//according to oDrive docs, NOT IMPLEMENTED
+        INPUT_MODE_TRAP_TRAJ,
+        INPUT_MODE_TORQUE_RAMP,
+        INPUT_MODE_MIRROR,
+        INPUT_MODE_Tuning
+    };
     oDrive(std::string portName);
     int commandConsole();
     virtual ~oDrive();
-    int setState(int axis, int state);
+    int setAxisState(int axis, int state);
+    int setInputMode(int axis, int mode);
     int setVelocity(int axis, float vel);
     int setLockinVelocity(int axis, float vel);
     float getPosEstimate(int axis);

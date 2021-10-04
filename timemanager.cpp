@@ -6,8 +6,8 @@ timeManager::timeManager()
 
 }
 
-template<typename F>
+/*template<typename F>
 bool timeManager::stopWatch<F>(F f)
 {
     std::cout<<"dw"<<std::endl;
-}
+}*/
