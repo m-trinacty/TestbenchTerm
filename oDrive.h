@@ -58,6 +58,7 @@ public:
     int getLockinVelocity(int axis);
     float getPosInTurns(int axis);
     int setPosInTurns(int axis, float pos);
+    int setPos(int axis, float pos);
 
 };
 

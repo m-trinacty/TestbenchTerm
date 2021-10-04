@@ -106,7 +106,12 @@ int port::writeToPort(std::string message){
         std::cout << "Error "<< errno << " writing: " << strerror(errno) << std::endl<<std::flush;
         return 0;
     }
-	return numBytes;
+    /*Check for return*/
+    char readBuf [256];
+    if(message[0]=='w'){
+        read(m_serialPort,&readBuf,sizeof(readBuf));
+    }
+    return numBytes;
 }
 //cant read
 std::string port::readFromPort(){

@@ -13,7 +13,7 @@
 #define INVALID_PROPERTY    "invalid property"
 #define INVALID_COMMAND_FORMAT  "invalid command format"
 #define UNKNOWN_COMMAND "unknown command"
-#define PRINT_READ_VALUES   false
+#define PRINT_READ_VALUES   true
 
 
 oDrive::oDrive() {
@@ -80,7 +80,7 @@ int oDrive::setAxisState(int axis,int state){
 }
 
 int oDrive::setInputMode(int axis, int mode){
-    std::string command = "w axis"+std::to_string(axis)+ ".controller.input_mode "+std::to_string(mode);
+    std::string command = "w axis"+std::to_string(axis)+ ".controller.config.input_mode "+std::to_string(mode);
     if (m_oDrivePort->writeToPort(command)<0) {
         std::cout<<ERROR_COMMAND_WRITE<<std::endl;
         return EXIT_FAILURE;
@@ -118,7 +118,8 @@ float oDrive::getPosEstimate(int axis)
         return EXIT_FAILURE;
     }
     #if PRINT_READ_VALUES
-        std::cout << out << std::endl;
+
+        std::cout<< out << std::endl;
     #endif
     float pos =std::stof(out);
     return pos;
@@ -213,6 +214,17 @@ int oDrive::setPosInTurns(int axis,float pos){
     if(m_oDrivePort->writeToPort(command)<0){
         std::cout<<ERROR_COMMAND_WRITE<<std::endl;
         return 0;
+    }
+    usleep(100);
+    return EXIT_SUCCESS;
+}
+
+int oDrive::setPos(int axis, float pos)
+{
+    std::string command = "w axis"+std::to_string(axis)+ ".controller.input_vel "+std::to_string(pos);
+    if (m_oDrivePort->writeToPort(command)<0) {
+        std::cout<<ERROR_COMMAND_WRITE<<std::endl;
+        return EXIT_FAILURE;
     }
     usleep(100);
     return EXIT_SUCCESS;

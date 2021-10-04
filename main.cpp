@@ -15,18 +15,43 @@
 
 #include "oDrive.h"
 #include "pps.h"
+#include "timemanager.h"
 
 int main() {
-
     const std::string portName = "/dev/ttyACM0";
     std::unique_ptr<oDrive> odrive(new oDrive(portName));
+
+    odrive->setInputMode(0,odrive->INPUT_MODE_PASSTHROUGH);
     odrive->setAxisState(0,odrive->AXIS_STATE_CLOSED_LOOP_CONTROL);
 
-    auto now=std::chrono::system_clock::now();
+    float posCircular=odrive->getPosCircular(0);
+    float posEstimate=odrive->getPosEstimate(0);
+    float posEstimateCounts = odrive->getPosEstimateCounts(0);
+    odrive->setPos(0,0);
+    timeManager::sleep(2);
+    std::cout<<"Pos Circular"<<std::endl;
+    posCircular=odrive->getPosCircular(0);
+    std::cout<<posCircular<<std::endl;
+    std::cout<<"______________________________"<<std::endl<<std::endl;
+
+    std::cout<<"Pos Estimate"<<std::endl;
+    posEstimate=odrive->getPosEstimate(0);
+    std::cout<<posEstimate<<std::endl;
+    std::cout<<"______________________________"<<std::endl<<std::endl;
+
+    std::cout<<"Pos Estimate Counts"<<std::endl;
+    posEstimateCounts =odrive->getPosEstimateCounts(0);
+    std::cout<<posEstimateCounts<<std::endl;
+    std::cout<<"______________________________"<<std::endl<<std::endl;
+    odrive->setPos(0,10);
+    timeManager::sleep(2);
+    /*auto now=std::chrono::system_clock::now();
     auto nowTime =  std::chrono::system_clock::to_time_t(now);
     auto start = std::chrono::steady_clock::now();
     std::stringstream ss;
     std::stringstream fileName;
+
+
     fileName << std::put_time(std::localtime(&nowTime),"%Y-%m-%d_%X");
     std::ofstream spinLog("spinLog_"+fileName.str()+".log");
 
@@ -71,9 +96,8 @@ int main() {
         {
             break;
         }
-    }
+    }*/
     odrive->setAxisState(0,odrive->AXIS_STATE_IDLE);
 
-    //odrive->commandConsole();
     return 0;
 };
