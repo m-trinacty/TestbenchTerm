@@ -14,7 +14,7 @@
 class oDrive {
 private:
     port * m_oDrivePort;
-
+    int setMinEndstop(int axis, bool enabled);
 public:
 
     oDrive();
@@ -55,10 +55,13 @@ public:
     float getPosEstimate(int axis);
     float getPosEstimateCounts(int axis);
     float getPosCircular(int axis);
+    float getPosCprCounts(int axis);
     int getLockinVelocity(int axis);
     float getPosInTurns(int axis);
+    bool getMinEndstop(int axis);
     int setPosInTurns(int axis, float pos);
     int setPos(int axis, float pos);
+    void setHoming(int axis);
 
 };
 

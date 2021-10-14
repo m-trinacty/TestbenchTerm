@@ -3,11 +3,13 @@ import time
 import odrive
 from odrive.enums import *
 import fibre
-#from fibre.protocol import ChannelBrokenException
-#import ChannelBrokenException
 
 
-class D6374MotorConfig:
+# from fibre.protocol import ChannelBrokenException
+# import ChannelBrokenException
+
+
+class D6374MotorOdrive:
     """
     Class for configuring an Odrive axis for a D6374 motor.
     Only works with one Odrive at a time.
@@ -48,16 +50,31 @@ class D6374MotorConfig:
         self.odrv = odrive.find_any()
         self.odrv_axis = getattr(self.odrv, "axis{}".format(self.axis_num))
 
+    def custom_homing(self):
+        print("HOMING test")
+        self._find_odrive()
+        #self.odrv_axis.controller.config.input_mode = INPUT_MODE_VEL_RAMP
+        self.odrv_axis.min_endstop.config.enabled = True
+        self.mode_homing()
+        while not self.odrv_axis.min_endstop.endstop_state:
+            print("Searching position")
+            time.sleep(2)
+
+        self.odrv_axis.min_endstop.config.enabled = False
+
+
     def configure(self):
         """
         Configures the odrive device for a  motor.
         """
+        # Put odrive in idle mode
+        self.mode_idle()
 
         # Erase pre-exsisting configuration
         print("Erasing pre-exsisting configuration...")
         try:
             self.odrv.erase_configuration()
-        except:#ChannelBrokenException:
+        except:  # ChannelBrokenException:
             pass
 
         self._find_odrive()
@@ -67,7 +84,8 @@ class D6374MotorConfig:
         self.odrv.config.brake_resistance = 0.55
         # D6374 has 7 pole pairs
         self.odrv_axis.motor.config.pole_pairs = 7
-        self.odrv_axis.motor.config.calibration_current = 5
+        self.odrv_axis.motor.config.calibration_current = 20
+        self.odrv_axis.motor.config.current_lim = 20
 
         self.odrv_axis.motor.config.motor_type = MOTOR_TYPE_HIGH_CURRENT
         self.odrv_axis.motor.config.resistance_calib_max_voltage = 2
@@ -80,29 +98,27 @@ class D6374MotorConfig:
         # CUI AMT 102V is incremental encoder
         self.odrv_axis.encoder.config.mode = ENCODER_MODE_INCREMENTAL
 
-        #Counts per revolution is 4x ppr, here using highest resolution, so
-        #ppr is 2048
+        # Counts per revolution is 4x ppr, here using highest resolution, so
+        # ppr is 2048
         self.odrv_axis.encoder.config.cpr = 8192
 
         # 50.26548385620117 left as default
         # offset calibration displacement to get better calibration accuracy.
         self.odrv_axis.encoder.config.calib_scan_distance = 50.26548385620117
 
-
-
         self.odrv_axis.encoder.config.use_index = True
 
-        #Encoder bandwith left as default
+        # Encoder bandwith left as default
         self.odrv_axis.encoder.config.bandwidth = 1000
+        self.odrv_axis.encoder.config.phase_offset_float = 0.0
 
-        #These are tuning values
-        self.odrv_axis.controller.config.pos_gain = 15
-        self.odrv_axis.controller.config.vel_gain = 0.02 * self.odrv_axis.motor.config.torque_constant * self.odrv_axis.encoder.config.cpr
-        self.odrv_axis.controller.config.vel_integrator_gain = 0.1 * self.odrv_axis.motor.config.torque_constant * self.odrv_axis.encoder.config.cpr
-        self.odrv_axis.controller.config.vel_limit = 144
+        self.odrv_axis.encoder.config.phase_offset = 4096
 
-
-
+        # These are tuned values
+        self.odrv_axis.controller.config.pos_gain = 32  # 20 + 60%
+        self.odrv_axis.controller.config.vel_gain = 0.256  # 0.16 +60%
+        self.odrv_axis.controller.config.vel_integrator_gain = 0.640  # 0.5 * 5 * 0.256
+        self.odrv_axis.controller.config.vel_limit = 200  # max is 46
 
         print("Saving manual configuration and rebooting...")
         try:
@@ -162,9 +178,8 @@ class D6374MotorConfig:
         self.odrv_axis.motor.config.pre_calibrated = True
         print("Finding index for encoder...")
         self.odrv_axis.requested_state = AXIS_STATE_ENCODER_INDEX_SEARCH
-        #Wait for odrive to find index
+        # Wait for odrive to find index
         time.sleep(5)
-
 
         print("Calibrating Odrive for encoder...")
         self.odrv_axis.requested_state = AXIS_STATE_ENCODER_OFFSET_CALIBRATION
@@ -217,18 +232,18 @@ class D6374MotorConfig:
         self.odrv_axis.controller.config.input_mode = INPUT_MODE_PASSTHROUGH
         self.odrv_axis.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
 
-        self.odrv_axis.controller.config.anticogging.calib_pos_threshold = 10
+        self.odrv_axis.controller.config.anticogging.calib_pos_threshold = 40
 
-        self.odrv_axis.controller.config.anticogging.calib_vel_threshold = 10
+        self.odrv_axis.controller.config.anticogging.calib_vel_threshold = 40
 
-        #Temporarily increase the gain
+        # Temporarily increase the gain
         self.odrv_axis.controller.config.pos_gain = 300
-        self.odrv_axis.controller.config.vel_integrator_gain =0.01
+        self.odrv_axis.controller.config.vel_integrator_gain = 0.01
         self.odrv_axis.controller.config.vel_gain = 0.01
 
-        #set threshold for calibration higher
-        self.odrv_axis.controller.config.anticogging.calib_vel_threshold = 80
-        self.odrv_axis.controller.config.anticogging.calib_pos_threshold = 80
+        # set threshold for calibration higher
+        self.odrv_axis.controller.config.anticogging.calib_vel_threshold = 70
+        self.odrv_axis.controller.config.anticogging.calib_pos_threshold = 70
 
         # THIS IS THE MAGIC - Start the calibration
 
@@ -242,14 +257,17 @@ class D6374MotorConfig:
             calib_time = calib_time + 2
             time.sleep(2)
 
-        print("Anticogging calibration took: "+str(calib_time)+" seconds")
+        print("Anticogging calibration took: " + str(calib_time) + " seconds")
 
         self.odrv_axis.controller.config.anticogging.pre_calibrated = True
-        # Put updated values for anticogging calibration back to normal
-        self.odrv_axis.controller.config.pos_gain = 15
-        self.odrv_axis.controller.config.vel_gain = 0.02 * self.odrv_axis.motor.config.torque_constant * self.odrv_axis.encoder.config.cpr
-        self.odrv_axis.controller.config.vel_integrator_gain = 0.1 * self.odrv_axis.motor.config.torque_constant * self.odrv_axis.encoder.config.cpr
 
+        # Put updated values for anticogging calibration back to normal
+        # These are tuned values
+        self.odrv_axis.controller.config.pos_gain = 32  # 20 + 60%
+        self.odrv_axis.controller.config.vel_gain = 0.256  # 0.16 +60%
+        self.odrv_axis.controller.config.vel_integrator_gain = 0.640  # 0.5 * 5 * 0.256
+
+        self.odrv_axis.motor.config.current_lim = 12
         # Set control to velocity mode and input to ramp, then set ramp to 5turns/s
         self.odrv_axis.controller.config.control_mode = CONTROL_MODE_VELOCITY_CONTROL
         self.odrv_axis.controller.config.input_mode = INPUT_MODE_VEL_RAMP
@@ -258,6 +276,40 @@ class D6374MotorConfig:
         time.sleep(2)
 
         print("Saving calibration configuration and rebooting...")
+        # try:
+        #     self.odrv.save_configuration()
+        #     print("Calibration configuration saved.")
+        # except fibre.libfibre.ObjectLostError:
+        #     pass
+        # time.sleep(5)
+        # self._find_odrive()
+        #
+        #
+        # try:
+        #     print("Reboot Odrive.")
+        #     self.odrv.reboot()
+        # except fibre.libfibre.ObjectLostError:
+        #     pass
+        # time.sleep(4)
+        # self._find_odrive()
+        self.odrv_axis.min_endstop.config.gpio_num = 1
+        self.odrv_axis.min_endstop.config.enabled = True
+        self.odrv_axis.min_endstop.config.offset = 0
+        self.odrv_axis.min_endstop.config.debouncecust_ms = 10
+        # print("Homing configuration")
+        # # Set the homing speed to 0.25 turns / sec
+        # self.odrv_axis.controller.config.homing_speed = 0.25
+        # #self.odrv_axis.controller.config.vel_ramp_rate
+        # self.odrv_axis.trap_traj.config.vel_limit = 5
+        # self.odrv_axis.trap_traj.config.accel_limit = 5
+        # self.odrv_axis.trap_traj.config.decel_limit = 5
+        # self.odrv_axis.min_endstop.config.enabled = True
+
+        # self.mode_homing()
+        # time.sleep(10)
+        # self.odrv_axis.config.startup_homing = True
+        self.mode_idle()
+        print("Saving calibration configuration and rebooting...")
         try:
             self.odrv.save_configuration()
             print("Calibration configuration saved.")
@@ -265,7 +317,6 @@ class D6374MotorConfig:
             pass
         time.sleep(5)
         self._find_odrive()
-
 
         try:
             print("Reboot Odrive.")
@@ -290,6 +341,13 @@ class D6374MotorConfig:
 
         self.odrv_axis.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
 
+    def mode_homing(self):
+        """
+        Puts the motor in homing state.
+        """
+
+        self.odrv_axis.requested_state = AXIS_STATE_HOMING
+
     def move_input_pos(self, angle):
         """
         Puts the motor at a certain angle.
@@ -310,24 +368,20 @@ class D6374MotorConfig:
 
         self.odrv_axis.controller.input_vel = vel
 
+
 if __name__ == "__main__":
-    d6374_motor_config = D6374MotorConfig(axis_num=0)
-    d6374_motor_config.configure()
+    d6374_motor_config = D6374MotorOdrive(axis_num=0)
+    #d6374_motor_config.configure()
 
     print("CONDUCTING MOTOR TEST")
+    d6374_motor_config.custom_homing()
     print("Placing motor in close loop control. If you move motor, motor will "
           "resist you.")
     d6374_motor_config.mode_close_loop_control()
-
-    #Spin motor for 10 seconds in speed of 2 turns per second, then other way same speed
-    vel = 0.05
-    print("Startin rotation in speed "+str(vel)+" turns per second for 5 seconds")
-    d6374_motor_config.move_input_vel(vel)
-    time.sleep(5)
-
-    print("Startin rotation in speed "+str(vel)+" turns per second for 5 seconds in reverse")
-    d6374_motor_config.move_input_vel(-1*vel)
-    time.sleep(5)
+    vel = 5
+    print("Startin rotation in speed " + str(vel) + " turns per second for 5 seconds in reverse")
+    d6374_motor_config.move_input_vel(-1 * vel)
+    time.sleep(10)
     print("Placing motor in idle. If you move motor, motor will "
           "move freely")
     d6374_motor_config.mode_idle()

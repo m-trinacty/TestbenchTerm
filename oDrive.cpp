@@ -13,8 +13,41 @@
 #define INVALID_PROPERTY    "invalid property"
 #define INVALID_COMMAND_FORMAT  "invalid command format"
 #define UNKNOWN_COMMAND "unknown command"
-#define PRINT_READ_VALUES   true
+#define PRINT_READ_VALUES   false
 
+
+int oDrive::setMinEndstop(int axis, bool enabled)
+{
+    std::string command = "w axis"+ std::to_string(axis)+ ".min_endstop.config.enabled "+(enabled?"1":0);
+    if (m_oDrivePort->writeToPort(command)<0) {
+        std::cout<<ERROR_COMMAND_WRITE<<std::endl;
+        return EXIT_FAILURE;
+    }
+    usleep(100);
+    return EXIT_SUCCESS;
+}
+
+bool oDrive::getMinEndstop(int axis)
+{
+    std::string out;
+    std::string command = "r axis"+std::to_string(axis)+".min_endstop.endstop_state";
+    if (m_oDrivePort->writeToPort(command)<0) {
+        std::cout<<ERROR_COMMAND_WRITE<<std::endl;
+        return EXIT_FAILURE;
+    }
+    usleep(100);
+    out = m_oDrivePort->readFromPort();
+    if (out == INVALID_PROPERTY ||out ==  INVALID_COMMAND_FORMAT ||out ==  UNKNOWN_COMMAND) {
+        std::cout<<out<<std::endl;
+        std::cout<<ERROR_COMMAND_READ<<std::endl;
+        return EXIT_FAILURE;
+    }
+#if PRINT_READ_VALUES
+    std::cout << out << std::endl;
+#endif
+    bool homed = out=="1"?true:false;
+    return homed;
+}
 
 oDrive::oDrive() {
     // TODO Auto-generated constructor stub
@@ -32,7 +65,6 @@ int oDrive::commandConsole(){
     std::cout << "| To control oDrive            |" << std::endl;
     std::cout << "********************************" << std::endl;
 
-    //oDrive->writeToPort("w axis0.requested_state 3");
     std::string input="aaaa";
     char startLetter= 'a';
     while(1){
@@ -69,7 +101,6 @@ int oDrive::commandConsole(){
     return EXIT_SUCCESS;
 }
 int oDrive::setAxisState(int axis,int state){
-    //TODO some checks
     std::string command = "w axis"+ std::to_string(axis)+ ".requested_state "+std::to_string(state);
     if (m_oDrivePort->writeToPort(command)<0) {
         std::cout<<ERROR_COMMAND_WRITE<<std::endl;
@@ -117,10 +148,10 @@ float oDrive::getPosEstimate(int axis)
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
-    #if PRINT_READ_VALUES
+#if PRINT_READ_VALUES
 
-        std::cout<< out << std::endl;
-    #endif
+    std::cout<< out << std::endl;
+#endif
     float pos =std::stof(out);
     return pos;
 }
@@ -140,9 +171,9 @@ float oDrive::getPosEstimateCounts(int axis)
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
-    #if PRINT_READ_VALUES
-        std::cout << out << std::endl;
-    #endif
+#if PRINT_READ_VALUES
+    std::cout << out << std::endl;
+#endif
     float pos =std::stof(out);
     return pos;
 }
@@ -161,9 +192,30 @@ float oDrive::getPosCircular(int axis)
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
-    #if PRINT_READ_VALUES
-        std::cout << out << std::endl;
-    #endif
+#if PRINT_READ_VALUES
+    std::cout << out << std::endl;
+#endif
+    float pos =std::stof(out);
+    return pos;
+}
+
+float oDrive::getPosCprCounts(int axis)
+{
+    std::string out;
+    std::string command = "r axis"+std::to_string(axis)+".encoder.pos_circular";
+    if (m_oDrivePort->writeToPort(command)<0) {
+        std::cout<<ERROR_COMMAND_WRITE<<std::endl;
+        return EXIT_FAILURE;
+    }
+    usleep(100);
+    out = m_oDrivePort->readFromPort();
+    if (out == INVALID_PROPERTY ||out ==  INVALID_COMMAND_FORMAT || out == UNKNOWN_COMMAND) {
+        std::cout<<ERROR_COMMAND_READ<<std::endl;
+        return EXIT_FAILURE;
+    }
+#if PRINT_READ_VALUES
+    std::cout << out << std::endl;
+#endif
     float pos =std::stof(out);
     return pos;
 }
@@ -180,9 +232,9 @@ int oDrive::getLockinVelocity(int axis){
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
-    #if PRINT_READ_VALUES
-        std::cout << out << std::endl;
-    #endif
+#if PRINT_READ_VALUES
+    std::cout << out << std::endl;
+#endif
     return EXIT_SUCCESS;
 }
 
@@ -201,9 +253,9 @@ float oDrive::getPosInTurns(int axis){
         std::cout<<ERROR_COMMAND_READ<<std::endl;
         return EXIT_FAILURE;
     }
-    #if PRINT_READ_VALUES
-        std::cout << out << std::endl;
-    #endif
+#if PRINT_READ_VALUES
+    std::cout << out << std::endl;
+#endif
     pos =stof(out.substr(0,out.find(delimiter)));
     return pos;
 }
@@ -228,6 +280,22 @@ int oDrive::setPos(int axis, float pos)
     }
     usleep(100);
     return EXIT_SUCCESS;
+}
+
+void oDrive::setHoming(int axis)
+{
+    std::string showMessageStart= "Searching home";
+
+    std::string showMessageEnd= "Odrive homed";
+    setMinEndstop(axis,true);
+    setAxisState(axis,AXIS_STATE_HOMING);
+    std::cout << showMessageStart<< std::endl;
+    while(!getMinEndstop(axis)){}
+    if(getMinEndstop(axis)){
+        std::cout << showMessageEnd<< std::endl;
+    }
+    setMinEndstop(axis,false);
+
 }
 oDrive::~oDrive() {
     delete m_oDrivePort;
