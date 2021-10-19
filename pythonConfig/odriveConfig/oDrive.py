@@ -296,18 +296,21 @@ class D6374MotorOdrive:
         self.odrv_axis.min_endstop.config.enabled = True
         self.odrv_axis.min_endstop.config.offset = 0
         self.odrv_axis.min_endstop.config.debouncecust_ms = 10
-        # print("Homing configuration")
-        # # Set the homing speed to 0.25 turns / sec
-        # self.odrv_axis.controller.config.homing_speed = 0.25
-        # #self.odrv_axis.controller.config.vel_ramp_rate
-        # self.odrv_axis.trap_traj.config.vel_limit = 5
-        # self.odrv_axis.trap_traj.config.accel_limit = 5
-        # self.odrv_axis.trap_traj.config.decel_limit = 5
-        # self.odrv_axis.min_endstop.config.enabled = True
+        print("Homing configuration")
+        # Set the homing speed to 0.25 turns / sec
+        self.odrv_axis.controller.config.homing_speed = 2
+        #self.odrv_axis.controller.config.vel_ramp_rate
+        self.odrv_axis.trap_traj.config.vel_limit = 5
+        self.odrv_axis.trap_traj.config.accel_limit = 5
+        self.odrv_axis.trap_traj.config.decel_limit = 5
+        self.odrv_axis.min_endstop.config.enabled = True
 
-        # self.mode_homing()
-        # time.sleep(10)
-        # self.odrv_axis.config.startup_homing = True
+        self.mode_homing()
+        while not self.odrv_axis.min_endstop.endstop_state:
+            time.sleep(1)
+            print("Searching home")
+
+        self.odrv_axis.config.startup_homing = True
         self.mode_idle()
         print("Saving calibration configuration and rebooting...")
         try:

@@ -45,7 +45,7 @@ bool oDrive::getMinEndstop(int axis)
 #if PRINT_READ_VALUES
     std::cout << out << std::endl;
 #endif
-    bool homed = out=="1"?true:false;
+    bool homed = std::stoi(out)==1?true:false;
     return homed;
 }
 
@@ -132,6 +132,28 @@ int oDrive::setLockinVelocity(int axis, float vel){
     m_oDrivePort->writeToPort(command);
     usleep(100);
     return EXIT_SUCCESS;
+}
+
+int oDrive::getAxisState(int axis)
+{
+    std::string out;
+    std::string command = "r axis"+std::to_string(axis)+".current_state";
+    if (m_oDrivePort->writeToPort(command)<0) {
+        std::cout<<ERROR_COMMAND_WRITE<<std::endl;
+        return EXIT_FAILURE;
+    }
+    usleep(100);
+    out = m_oDrivePort->readFromPort();
+    if (out == INVALID_PROPERTY ||out ==  INVALID_COMMAND_FORMAT ||out ==  UNKNOWN_COMMAND) {
+        std::cout<<ERROR_COMMAND_READ<<std::endl;
+        return EXIT_FAILURE;
+    }
+#if PRINT_READ_VALUES
+
+    std::cout<< out << std::endl;
+#endif
+    int state = std::stoi(out);
+    return state;
 }
 
 float oDrive::getPosEstimate(int axis)
@@ -285,16 +307,21 @@ int oDrive::setPos(int axis, float pos)
 void oDrive::setHoming(int axis)
 {
     std::string showMessageStart= "Searching home";
-
+    std::cout<<"Current_state: "<<getAxisState(0)<<std::endl;
     std::string showMessageEnd= "Odrive homed";
     setMinEndstop(axis,true);
     setAxisState(axis,AXIS_STATE_HOMING);
     std::cout << showMessageStart<< std::endl;
-    while(!getMinEndstop(axis)){}
+    bool searching = false;
+    while(!searching){
+        searching =getMinEndstop(axis);
+        usleep(100);
+    }
     if(getMinEndstop(axis)){
         std::cout << showMessageEnd<< std::endl;
     }
     setMinEndstop(axis,false);
+
 
 }
 oDrive::~oDrive() {

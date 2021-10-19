@@ -52,6 +52,8 @@ public:
     int setInputMode(int axis, int mode);
     int setVelocity(int axis, float vel);
     int setLockinVelocity(int axis, float vel);
+
+    int getAxisState(int axis);
     float getPosEstimate(int axis);
     float getPosEstimateCounts(int axis);
     float getPosCircular(int axis);
