@@ -14,7 +14,6 @@
 class oDrive {
 private:
     port * m_oDrivePort;
-    int setMinEndstop(int axis, bool enabled);
 public:
 
     oDrive();
@@ -52,7 +51,7 @@ public:
     int setInputMode(int axis, int mode);
     int setVelocity(int axis, float vel);
     int setLockinVelocity(int axis, float vel);
-
+    int clearErrors(int axis);
     int getAxisState(int axis);
     float getPosEstimate(int axis);
     float getPosEstimateCounts(int axis);
@@ -62,7 +61,8 @@ public:
     float getPosInTurns(int axis);
     bool getMinEndstop(int axis);
     int setPosInTurns(int axis, float pos);
-    int setPos(int axis, float pos);
+    int setPos(int axis, float pos);    
+    int setMinEndstop(int axis, bool enabled);
     void setHoming(int axis);
 
 };

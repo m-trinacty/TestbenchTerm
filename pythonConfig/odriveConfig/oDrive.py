@@ -242,8 +242,8 @@ class D6374MotorOdrive:
         self.odrv_axis.controller.config.vel_gain = 0.01
 
         # set threshold for calibration higher
-        self.odrv_axis.controller.config.anticogging.calib_vel_threshold = 70
-        self.odrv_axis.controller.config.anticogging.calib_pos_threshold = 70
+        self.odrv_axis.controller.config.anticogging.calib_vel_threshold = 80
+        self.odrv_axis.controller.config.anticogging.calib_pos_threshold = 80
 
         # THIS IS THE MAGIC - Start the calibration
 
@@ -275,27 +275,29 @@ class D6374MotorOdrive:
         self.odrv_axis.requested_state = AXIS_STATE_IDLE
         time.sleep(2)
 
-        print("Saving calibration configuration and rebooting...")
-        # try:
-        #     self.odrv.save_configuration()
-        #     print("Calibration configuration saved.")
-        # except fibre.libfibre.ObjectLostError:
-        #     pass
-        # time.sleep(5)
-        # self._find_odrive()
-        #
-        #
-        # try:
-        #     print("Reboot Odrive.")
-        #     self.odrv.reboot()
-        # except fibre.libfibre.ObjectLostError:
-        #     pass
-        # time.sleep(4)
-        # self._find_odrive()
+        print("Saving anticogging calibration configuration and rebooting...")
+        try:
+            self.odrv.save_configuration()
+            print("Calibration configuration saved.")
+        except fibre.libfibre.ObjectLostError:
+            pass
+        time.sleep(5)
+        self._find_odrive()
+
+        try:
+            print("Reboot Odrive.")
+            self.odrv.reboot()
+        except fibre.libfibre.ObjectLostError:
+            pass
+        time.sleep(4)
+        self._find_odrive()
+
+        self.odrv.config.gpio1_mode = GPIO_MODE_DIGITAL_PULL_DOWN
         self.odrv_axis.min_endstop.config.gpio_num = 1
         self.odrv_axis.min_endstop.config.enabled = True
+        self.odrv_axis.min_endstop.config.is_active_high = True
         self.odrv_axis.min_endstop.config.offset = 0
-        self.odrv_axis.min_endstop.config.debouncecust_ms = 10
+        self.odrv_axis.min_endstop.config.debounce_ms = 50
         print("Homing configuration")
         # Set the homing speed to 0.25 turns / sec
         self.odrv_axis.controller.config.homing_speed = 2
@@ -303,7 +305,23 @@ class D6374MotorOdrive:
         self.odrv_axis.trap_traj.config.vel_limit = 5
         self.odrv_axis.trap_traj.config.accel_limit = 5
         self.odrv_axis.trap_traj.config.decel_limit = 5
-        self.odrv_axis.min_endstop.config.enabled = True
+
+        print("Saving homing configuration and rebooting...")
+        try:
+            self.odrv.save_configuration()
+            print("Calibration configuration saved.")
+        except fibre.libfibre.ObjectLostError:
+            pass
+        time.sleep(5)
+        self._find_odrive()
+
+        try:
+            print("Reboot Odrive.")
+            self.odrv.reboot()
+        except fibre.libfibre.ObjectLostError:
+            pass
+        time.sleep(4)
+        self._find_odrive()
 
         self.mode_homing()
         while not self.odrv_axis.min_endstop.endstop_state:
@@ -359,7 +377,7 @@ class D6374MotorOdrive:
         :type angle: int or float
         """
 
-        self.odrv_axis.controller.input_pos = angle / 360.0
+        self.odrv_axis.controller.input_pos = angle
 
     def move_input_vel(self, vel):
         """
@@ -374,10 +392,9 @@ class D6374MotorOdrive:
 
 if __name__ == "__main__":
     d6374_motor_config = D6374MotorOdrive(axis_num=0)
-    #d6374_motor_config.configure()
+    d6374_motor_config.configure()
 
     print("CONDUCTING MOTOR TEST")
-    d6374_motor_config.custom_homing()
     print("Placing motor in close loop control. If you move motor, motor will "
           "resist you.")
     d6374_motor_config.mode_close_loop_control()

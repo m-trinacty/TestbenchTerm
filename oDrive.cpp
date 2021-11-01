@@ -13,12 +13,13 @@
 #define INVALID_PROPERTY    "invalid property"
 #define INVALID_COMMAND_FORMAT  "invalid command format"
 #define UNKNOWN_COMMAND "unknown command"
-#define PRINT_READ_VALUES   false
+#define PRINT_READ_VALUES   true
 
 
 int oDrive::setMinEndstop(int axis, bool enabled)
 {
-    std::string command = "w axis"+ std::to_string(axis)+ ".min_endstop.config.enabled "+(enabled?"1":0);
+    std::string enable=enabled?"1":"0";
+    std::string command = "w axis"+ std::to_string(axis)+ ".min_endstop.config.enabled "+enable;
     if (m_oDrivePort->writeToPort(command)<0) {
         std::cout<<ERROR_COMMAND_WRITE<<std::endl;
         return EXIT_FAILURE;
@@ -130,6 +131,17 @@ int oDrive::setVelocity(int axis, float vel)
 int oDrive::setLockinVelocity(int axis, float vel){
     std::string command = "w axis"+std::to_string(axis)+".config.general_lockin.vel "+std::to_string(vel);
     m_oDrivePort->writeToPort(command);
+    usleep(100);
+    return EXIT_SUCCESS;
+}
+
+int oDrive::clearErrors(int axis)
+{
+    std::string command = "w axis"+std::to_string(axis)+".error 0";
+    if (m_oDrivePort->writeToPort(command)<0) {
+        std::cout<<ERROR_COMMAND_WRITE<<std::endl;
+        return EXIT_FAILURE;
+    }
     usleep(100);
     return EXIT_SUCCESS;
 }
@@ -320,9 +332,6 @@ void oDrive::setHoming(int axis)
     if(getMinEndstop(axis)){
         std::cout << showMessageEnd<< std::endl;
     }
-    setMinEndstop(axis,false);
-
-
 }
 oDrive::~oDrive() {
     delete m_oDrivePort;
