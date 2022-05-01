@@ -9,6 +9,8 @@ WARNING testbench will turn into starting position to where is inductive sensor 
 
 There is another version of this app which is running on system as daemon service.
 
+![alt text](https://github.com/m-trinacty/TestbenchTerm/blob/master/testbench.jpg?raw=true)
+
 ### What is this repository for? ###
 
 * Quick summary
@@ -19,6 +21,10 @@ There is another version of this app which is running on system as daemon servic
 
 * Odrive board 24V 3.6 
 	-Firmware version : 0.5.2
+* Configured Odrive, if it is not configured yet
+	* Configuration file is in folder pythonconfig
+	* odrivetool is required
+	* connection directly to oDrive via USB
 * SDK tdx-wayland 5.3.0 build from testbench layers
 
 ### Setup ###
