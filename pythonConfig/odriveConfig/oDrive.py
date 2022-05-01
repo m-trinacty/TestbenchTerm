@@ -253,9 +253,9 @@ class D6374MotorOdrive:
         time.sleep(2)
         calib_time = calib_time + 2
         while self.odrv_axis.controller.config.anticogging.calib_anticogging:
-            print("Anticogging calibration: " + str(self.odrv_axis.controller.config.anticogging.calib_anticogging))
-            calib_time = calib_time + 2
-            time.sleep(2)
+           print("Anticogging calibration: " + str(self.odrv_axis.controller.config.anticogging.calib_anticogging))
+           calib_time = calib_time + 2
+           time.sleep(2)
 
         print("Anticogging calibration took: " + str(calib_time) + " seconds")
 
@@ -295,7 +295,7 @@ class D6374MotorOdrive:
         self.odrv.config.gpio1_mode = GPIO_MODE_DIGITAL_PULL_DOWN
         self.odrv_axis.min_endstop.config.gpio_num = 1
         self.odrv_axis.min_endstop.config.enabled = True
-        self.odrv_axis.min_endstop.config.is_active_high = True
+        self.odrv_axis.min_endstop.config.is_active_high = False
         self.odrv_axis.min_endstop.config.offset = 0
         self.odrv_axis.min_endstop.config.debounce_ms = 50
         print("Homing configuration")

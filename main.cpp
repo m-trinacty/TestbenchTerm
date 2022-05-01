@@ -15,12 +15,23 @@
 
 #include "oDrive.h"
 #include "pps.h"
-#include "timemanager.h"
+#include "logger.h"
+#include "helper.h"
+#define STOP 0
 
-int main() {
-    //TODO: add clear error function
-    //TODO: axis checking to deactivate endstop
-    //TODO: wifi connection
+int main(int argc,char * argv[] ) {
+#if STOP
+
+    const std::string portName = "/dev/oDrive";
+    std::unique_ptr<oDrive> odrive(new oDrive(portName));
+    odrive->setVelocity(0,0);
+
+#else
+    if(argc!=4){
+        std::cout<<"Not enough arguments"<<std::endl;
+        return EXIT_FAILURE;
+    }
+
     const std::string portName = "/dev/oDrive";
     std::unique_ptr<oDrive> odrive(new oDrive(portName));
     odrive->clearErrors(0);
@@ -32,72 +43,93 @@ int main() {
     odrive->setMinEndstop(0,false);
 
     odrive->getMinEndstop(0)?std::cout<<"True"<<std::endl:std::cout<<"False"<<std::endl;
-    std::cout<<"closedLOop"<<std::endl;
+    odrive->clearErrors(0);
+    std::cout<<"Closed loop"<<std::endl;
+    std::cout<<argv[1]<<std::endl;
     odrive->setAxisState(0,odrive->AXIS_STATE_CLOSED_LOOP_CONTROL);
 
     float posCircular=odrive->getPosCircular(0);
     float posEstimate=odrive->getPosEstimate(0);
     float posEstimateCounts = odrive->getPosEstimateCounts(0);
     float posInTurns = odrive->getPosInTurns(0);
+    float IqMeasurd = odrive->getIqMeasured(0);
+
+    float velF=0.0;
 
     auto now=std::chrono::system_clock::now();
     auto nowTime =  std::chrono::system_clock::to_time_t(now);
     auto start = std::chrono::steady_clock::now();
+
     std::stringstream ss;
     std::stringstream fileName;
 
 
     fileName << std::put_time(std::localtime(&nowTime),"%Y-%m-%d_%X");
-    std::ofstream spinLog("spinLog_"+fileName.str()+".log");
+    std::ofstream spinLog("logs/"+std::string(argv[3])+"_"+fileName.str()+".log");
 
     ss<<std::put_time(std::localtime(&nowTime),"%Y-%m-%d %X");
-    spinLog<<"TIME,POS_CIRCULAR,POS_ESTIMATE,POS_ESTIMATE_COUNTS;"<<std::endl;
-    std::cout<<"sys_clock::now() = "<< ss.str()<<std::endl;
-    std::cout<<"Setting velocity to 1"<<std::endl;
-    float velocity = 5.0;
-    odrive->setVelocity(0,velocity);
-    spinLog<<"Velocity= "<<std::to_string(velocity)<<std::endl;
-    auto timer = std::chrono::seconds(1);
-    while(1)
-    {
+    spinLog<<Logger::header();
 
-        if(std::chrono::steady_clock::now() - (start+timer) > std::chrono::seconds(1))
-        {
-            timer = timer+std::chrono::seconds(1);
-            now=std::chrono::system_clock::now();
-            nowTime =  std::chrono::system_clock::to_time_t(now);
-            std::stringstream ss;
-            ss<<std::put_time(std::localtime(&nowTime),"%Y-%m-%d_%X");
-            std::cout <<"Time: "<< ss.str()<<std::endl;
+    spinLog<<std::endl<<Logger::getTime()<<std::endl;
+    spinLog<<"HOMING POSITION"<<std::endl<<Logger::record(posCircular,posEstimate,posEstimateCounts,posInTurns,IqMeasurd)<<std::endl<<"HOMING POSITION"<<std::endl;
 
-            std::cout<<"________________________________________________"<<std::endl<<std::endl;
-            std::cout<<"Pos Circular"<<std::endl;
-            posCircular=odrive->getPosCircular(0);
-            std::cout<<posCircular<<std::endl;
-            std::cout<<"______________________________"<<std::endl<<std::endl;
 
-            std::cout<<"Pos Estimate"<<std::endl;
-            posEstimate=odrive->getPosEstimate(0);
-            std::cout<<posEstimate<<std::endl;
-            std::cout<<"______________________________"<<std::endl<<std::endl;
-
-            std::cout<<"Pos Estimate Counts"<<std::endl;
-            posEstimateCounts =odrive->getPosEstimateCounts(0);
-            std::cout<<posEstimateCounts<<std::endl;
-            std::cout<<"______________________________"<<std::endl<<std::endl;
-
-            std::cout<<"Pos in turns"<<std::endl;
-            posInTurns   =odrive->getPosInTurns(0);
-            std::cout<<posInTurns<<std::endl;
-            std::cout<<"______________________________"<<std::endl<<std::endl;
-            spinLog<<ss.str()+", "+std::to_string(posCircular)+", "+std::to_string(posEstimate)+", "+std::to_string(posEstimateCounts)+";"<<std::endl;
+    if(Helper::isNumber(argv[1])){
+        std::string velS(argv[1]);
+        velF= std::stof(velS);
+        if(velF<=70){
+            std::cout<<"userVel="<<velF<<std::endl;
+            odrive->setVelocity(0,velF);
         }
-        if(std::chrono::steady_clock::now()- start> std::chrono::seconds(30))
-        {
-            break;
+        else{
+            return EXIT_FAILURE;
         }
     }
+    else{
+        return EXIT_FAILURE;
+    }
+    spinLog<<"Velocity = "<<std::to_string(velF)<<std::endl;
+
+
+    auto endTime =std::chrono::seconds(1);
+
+    if(Helper::isNumber(argv[2])){
+        std::string timeS(argv[2]);
+        int timeInt= std::stoi(timeS);
+        endTime = std::chrono::seconds(timeInt);
+    }
+    else{
+        return EXIT_FAILURE;
+    }
+
+
+
+    auto timer = std::chrono::milliseconds(10);
+
+    while(1)
+    {
+        if(std::chrono::steady_clock::now() - (start+timer) > std::chrono::milliseconds(1))
+        {
+            posCircular=odrive->getPosCircular(0);
+            posEstimate=odrive->getPosEstimate(0);
+            posEstimateCounts = odrive->getPosEstimateCounts(0);
+            posInTurns = odrive->getPosInTurns(0);
+            IqMeasurd= odrive->getIqMeasured(0);
+
+            spinLog<<Logger::record(posCircular,posEstimate,posEstimateCounts,posInTurns,IqMeasurd)<<std::endl;
+        }
+        if(std::chrono::steady_clock::now()- start> endTime)
+        {
+            std::cout<<"Velocity" <<odrive->getVelocity(0)<<std::endl;
+            //opacny smer minus, doimplementovat
+            float stopVel=odrive->getVelocity(0);
+            if(stopVel<0.05||stopVel>-0.05)
+                break;
+        }
+    }
+#endif
     odrive->setAxisState(0,odrive->AXIS_STATE_IDLE);
+
 
     return 0;
 };
